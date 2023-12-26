@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/PuerkitoBio/goquery"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -18,7 +17,7 @@ func CalendarReq() (string, error) {
 		Timeout: 15 * time.Second,
 	}
 
-	req, err := http.NewRequestWithContext(ctxHttp, "GET", "https://kakoysegodnyaprazdnik.ru/", nil)
+	req, err := http.NewRequestWithContext(ctxHttp, "GET", "https://kakoysegodnyaprazdnik.com/", nil)
 	if err != nil {
 		return "", err
 	}
@@ -33,16 +32,12 @@ func CalendarReq() (string, error) {
 		return "", err
 	}
 	var result string
-	count := 0
-	doc.Find(".listing .listing_wr .main").Each(func(i int, s *goquery.Selection) {
-		if count < 20 {
-			text := s.Find("span").First().Text()
-			text = strings.Replace(text, "США", ":flag_um:", 1)
-			text = strings.Replace(text, "Япония", ":flag_jp:", 1)
-			result += ":small_blue_diamond: " + text + "\n"
-		}
-		count++
+	div := doc.Find("div.boxed-text").First()
+	div.Find("li").Each(func(i int, s *goquery.Selection) {
+		text := s.Text()
+		result += ":small_orange_diamond: " + text + "\n"
 	})
-	result = "**Праздники сегодня kakoysegodnyaprazdnik.ru**\n" + result
+
+	result = "**Праздники сегодня kakoysegodnyaprazdnik.com**\n" + result
 	return result, nil
 }
