@@ -10,23 +10,18 @@
 - Отправляет в чат ссылку на новое созданное мероприятие (событие) сервера
 ## Настройка бота
 
-Настройка config.yaml
-
-```yaml
-discord:
-    codeinvite: "Код приглашения на сервер"
-    helloemote: "ID эмоции сервера"
-    lasted: ID последней новости Шики
-    mainchannel: "ID основного чата"
-    mediachannel: "ID медиа чата"
-    newschannel: "ID чата новостей"
-    testchannel: "ID чата для тестов"
-```
 Для работы бота необходимо [создать приложение](https://discord.com/developers/applications) на сайте discord
 
-Настройка .env
+Настройка env
 ```env
 DGU_TOKEN=Токен приложения
+DISCORD_CODEINVITE=Код приглашения на сервер
+DISCORD_HELLOEMOTE=ID эмоции сервера
+DISCORD_LASTED=ID последней новости Шики
+DISCORD_MAINCHANNEL=ID основного чата
+DISCORD_MEDIACHANNEL=ID медиа чата
+DISCORD_NEWSCHANNEL=ID чата новостей
+DISCORD_TESTCHANNEL=ID чата для тестов
 ```
 ## Команды
 

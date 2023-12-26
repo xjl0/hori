@@ -1,14 +1,18 @@
 package calendar
 
 import (
+	"context"
 	"github.com/PuerkitoBio/goquery"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func CalendarReq() (string, error) {
+	ctxHttp, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://kakoysegodnyaprazdnik.ru/", nil)
+	req, err := http.NewRequestWithContext(ctxHttp, "GET", "https://kakoysegodnyaprazdnik.ru/", nil)
 	if err != nil {
 		return "", err
 	}

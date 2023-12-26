@@ -3,8 +3,8 @@ package discord
 import (
 	"discordbotgo/pkg/calendar"
 	"github.com/bwmarrin/discordgo"
-	"github.com/spf13/viper"
 	"log"
+	"os"
 	"time"
 )
 
@@ -49,8 +49,8 @@ func (b *DBot) HandlerGetNews() {
 }
 
 func (b *DBot) HandlerGetHoliday() {
-	newsChannel := viper.GetString("discord.newschannel")
-	testChannel := viper.GetString("discord.testchannel")
+	newsChannel := os.Getenv("DISCORD_NEWSCHANNEL")
+	testChannel := os.Getenv("DISCORD_TESTCHANNEL")
 	for range time.Tick(time.Hour) {
 		if time.Now().Hour() == 8 {
 			text, err := calendar.CalendarReq()

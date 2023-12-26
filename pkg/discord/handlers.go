@@ -8,8 +8,8 @@ import (
 	gt "github.com/bas24/googletranslatefree"
 	"github.com/bwmarrin/discordgo"
 	"github.com/pemistahl/lingua-go"
-	"github.com/spf13/viper"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -59,9 +59,9 @@ func isALife(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 // Когда на сервере создаётся мероприятие, ссылка на событие отправляется в чат
 func eventCreate(s *discordgo.Session, e *discordgo.GuildScheduledEventCreate) {
-	testChannel := viper.GetString("discord.testchannel")
-	mainChannel := viper.GetString("discord.mainchannel")
-	codeInvite := viper.GetString("discord.codeinvite")
+	testChannel := os.Getenv("DISCORD_TESTCHANNEL")
+	mainChannel := os.Getenv("DISCORD_MAINCHANNEL")
+	codeInvite := os.Getenv("DISCORD_CODEINVITE")
 
 	if e.Name == "Test" {
 		s.ChannelMessageSend(testChannel, `https://discord.gg/`+codeInvite+`?event=`+e.ID)
@@ -73,10 +73,10 @@ func eventCreate(s *discordgo.Session, e *discordgo.GuildScheduledEventCreate) {
 
 // Основной обработчик сообщений
 func message(s *discordgo.Session, m *discordgo.MessageCreate) {
-	helloEmote := viper.GetString("discord.helloemote")
-	mainChannel := viper.GetString("discord.mainchannel")
-	mediaChannel := viper.GetString("discord.mediachannel")
-	testChannel := viper.GetString("discord.testchannel")
+	helloEmote := os.Getenv("DISCORD_HELLOEMOTE")
+	mainChannel := os.Getenv("DISCORD_MAINCHANNEL")
+	mediaChannel := os.Getenv("DISCORD_MEDIACHANNEL")
+	testChannel := os.Getenv("DISCORD_TESTCHANNEL")
 
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -163,20 +163,20 @@ func message(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 // Запрос и отправка последней новости с Шикимори
 func sendNews(s *discordgo.Session) {
-	lasted := viper.GetInt("discord.lasted")
-	newsChannel := viper.GetString("discord.newschannel")
+	lasted := os.Getenv("DISCORD_LASTED")
+	atoi, _ := strconv.Atoi(lasted)
+	newsChannel := os.Getenv("DISCORD_NEWSCHANNEL")
 	var res []shiki.Topic
 	//Получим новость
 	err := shiki.ShikiGetTopics(&res)
 	if err != nil {
 		log.Println(err)
 	}
-	if lasted == res[0].Id {
+	if atoi == res[0].Id {
 		return
 	}
 	//Получим и запишем ID последней новости
-	viper.Set("discord.lasted", res[0].Id)
-	viper.WriteConfig()
+	_ = os.Setenv("DISCORD_LASTED", strconv.Itoa(res[0].Id))
 	embed := discordgo.MessageEmbed{
 		URL:         `https://shikimori.one` + res[0].Forum.Url + "/" + strconv.Itoa(res[0].Id),
 		Type:        "rich",
