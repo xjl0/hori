@@ -23,9 +23,5 @@ COPY --chown=1001:1001 --from=builder /backend-app-files/hori-bot /hori-bot
 # Указываем пользователя
 USER app
 
-# Устанавливаем переменные окружения для приложения
-ENV GIN_MODE=release \
-    BACKEND_PORT=4005
-
 # Задаем точку входа
 ENTRYPOINT ["/hori-bot"]
