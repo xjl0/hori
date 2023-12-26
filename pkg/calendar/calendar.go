@@ -3,20 +3,42 @@ package calendar
 import (
 	"context"
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/net/proxy"
+	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
 
 func CalendarReq() (string, error) {
-	ctxHttp, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	// Создаем прокси-диалог
+	ctxHttp, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	client := &http.Client{}
+
+	dialer, err := proxy.SOCKS5("tcp", os.Getenv("PRXHOST"), nil, proxy.Direct)
+	if err != nil {
+		return "", err
+	}
+
+	// Создаем HTTP-транспорт с использованием прокси
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return dialer.Dial(network, addr)
+		},
+	}
+
+	// Создаем клиента с настроенным транспортом
+	client := &http.Client{
+		Timeout:   15 * time.Second,
+		Transport: transport,
+	}
+
 	req, err := http.NewRequestWithContext(ctxHttp, "GET", "https://kakoysegodnyaprazdnik.ru/", nil)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 	res, err := client.Do(req)
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
@@ -37,6 +59,6 @@ func CalendarReq() (string, error) {
 		}
 		count++
 	})
-	result = "**Праздники сегодня**\n" + result
+	result = "**Праздники сегодня kakoysegodnyaprazdnik.ru**\n" + result
 	return result, nil
 }
