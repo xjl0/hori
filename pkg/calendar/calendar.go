@@ -3,10 +3,7 @@ package calendar
 import (
 	"context"
 	"github.com/PuerkitoBio/goquery"
-	"golang.org/x/net/proxy"
-	"net"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -16,22 +13,9 @@ func CalendarReq() (string, error) {
 	ctxHttp, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	dialer, err := proxy.SOCKS5("tcp", os.Getenv("PRXHOST"), nil, proxy.Direct)
-	if err != nil {
-		return "", err
-	}
-
-	// Создаем HTTP-транспорт с использованием прокси
-	transport := &http.Transport{
-		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return dialer.Dial(network, addr)
-		},
-	}
-
 	// Создаем клиента с настроенным транспортом
 	client := &http.Client{
-		Timeout:   15 * time.Second,
-		Transport: transport,
+		Timeout: 15 * time.Second,
 	}
 
 	req, err := http.NewRequestWithContext(ctxHttp, "GET", "https://kakoysegodnyaprazdnik.ru/", nil)
