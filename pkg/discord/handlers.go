@@ -40,7 +40,7 @@ func translateText(targetLanguage, text string) (string, error) {
 	return gt.Translate(text, targetLanguage, `ru`)
 }
 
-//Проверка состояния бота
+// Проверка состояния бота
 func isALife(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -57,12 +57,12 @@ func isALife(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-//Когда на сервере создаётся мероприятие, ссылка на событие отправляется в чат
+// Когда на сервере создаётся мероприятие, ссылка на событие отправляется в чат
 func eventCreate(s *discordgo.Session, e *discordgo.GuildScheduledEventCreate) {
 	testChannel := viper.GetString("discord.testchannel")
 	mainChannel := viper.GetString("discord.mainchannel")
 	codeInvite := viper.GetString("discord.codeinvite")
-	
+
 	if e.Name == "Test" {
 		s.ChannelMessageSend(testChannel, `https://discord.gg/`+codeInvite+`?event=`+e.ID)
 		s.ChannelMessageSend(testChannel, "Событие с названием Test. Инвайт код "+codeInvite+" Инвайт ID "+e.ID)
@@ -71,22 +71,22 @@ func eventCreate(s *discordgo.Session, e *discordgo.GuildScheduledEventCreate) {
 	s.ChannelMessageSend(mainChannel, `https://discord.gg/EFyjYbqn7E?event=`+e.ID)
 }
 
-//Основной обработчик сообщений
+// Основной обработчик сообщений
 func message(s *discordgo.Session, m *discordgo.MessageCreate) {
 	helloEmote := viper.GetString("discord.helloemote")
 	mainChannel := viper.GetString("discord.mainchannel")
 	mediaChannel := viper.GetString("discord.mediachannel")
 	testChannel := viper.GetString("discord.testchannel")
-	
+
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
-	
+
 	//Ставит эмоцию приветствия
 	if m.Content == "<:"+helloEmote+">" {
 		s.MessageReactionAdd(m.ChannelID, m.ID, helloEmote)
 	}
-	
+
 	//Под ссылки ставить две эмоции
 	match, _ := regexp.MatchString(`https\:\/\/youtu\.be\/.*`, m.Content)
 	match2, _ := regexp.MatchString(`https\:\/\/www\.youtube\.com\/watch.*`, m.Content)
@@ -95,7 +95,7 @@ func message(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.MessageReactionAdd(m.ChannelID, m.ID, "👍")
 		s.MessageReactionAdd(m.ChannelID, m.ID, "👎")
 	}
-	
+
 	//Текущие праздники
 	if m.Content == "календарь" {
 		a, err := calendar.CalendarReq()
@@ -105,7 +105,7 @@ func message(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		s.ChannelMessageSend(m.ChannelID, a)
 	}
-	
+
 	//Вычисляет время по количеству серий
 	reg := `(?i)Сколько по времени (\d+) сер[А-Яа-я]{2}\?`
 	ref, _ := regexp.MatchString(reg, m.Content)
@@ -131,7 +131,7 @@ func message(s *discordgo.Session, m *discordgo.MessageCreate) {
 		zone, _ := r.Zone()
 		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf(`%d %s %d %s (1 серия 24 минуты). Если начать сейчас, то закончим в %s:%s %s`, hour, oconHours(hour), minute, oconMinutes(minute), dHour, dMinute, zone))
 	}
-	
+
 	//Автоматом переводит предложения на русский язык
 	if m.ChannelID == mainChannel || m.ChannelID == testChannel {
 		if strings.Contains(m.Content, `:`) || strings.Contains(m.Content, `>`) || strings.Contains(m.Content, `<`) || strings.Contains(m.Content, `/`) || strings.Contains(m.Content, `@`) {
@@ -161,7 +161,7 @@ func message(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-//Запрос и отправка последней новости с Шикимори
+// Запрос и отправка последней новости с Шикимори
 func sendNews(s *discordgo.Session) {
 	lasted := viper.GetInt("discord.lasted")
 	newsChannel := viper.GetString("discord.newschannel")

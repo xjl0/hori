@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  hori-bot:
+    image: "ghcr.io/xjl0/hori:latest"
+    container_name: hori-bot
+    restart: always

@@ -26,19 +26,19 @@ func (b *DBot) Start() error {
 	if err != nil {
 		return err
 	}
-	
+
 	b.dg = session
-	
+
 	b.dg.AddHandler(eventCreate)
 	b.dg.AddHandler(isALife)
 	b.dg.AddHandler(message)
-	
+
 	err = b.dg.Open()
 	if err != nil {
 		return err
 	}
 	log.Println("Bot is now running.  Press CTRL-C to exit.")
-	
+
 	return nil
 }
 
