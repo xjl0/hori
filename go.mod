@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
+	github.com/alexsergivan/transliterator v1.0.1
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/sashabaranov/go-openai v1.25.0

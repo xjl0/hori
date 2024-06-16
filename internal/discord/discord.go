@@ -4,6 +4,7 @@ import (
 	"context"
 	"discordbotgo/internal/chatGPT"
 	"errors"
+	"github.com/alexsergivan/transliterator"
 	"github.com/bwmarrin/discordgo"
 	"github.com/sashabaranov/go-openai"
 	"io"
@@ -14,8 +15,7 @@ import (
 )
 
 type Bot struct {
-	dBot      *discordgo.Session
-	clientGPT *chatGPT.GPT
+	dBot *discordgo.Session
 }
 
 func NewBot(token string, clientGPT *chatGPT.GPT) *Bot {
@@ -23,12 +23,15 @@ func NewBot(token string, clientGPT *chatGPT.GPT) *Bot {
 	if err != nil {
 		panic(err)
 	}
+
+	trans := transliterator.NewTransliterator(nil)
+
 	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
 	session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		MessageHandler(s, m, clientGPT)
+		MessageHandler(s, m, clientGPT, trans)
 	})
 
 	if err := session.Open(); err != nil {
@@ -46,14 +49,19 @@ func (b *Bot) Send(channelID, message string) {
 	b.dBot.ChannelMessageSend(channelID, message)
 }
 
-func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate, gpt *chatGPT.GPT) {
+func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate, gpt *chatGPT.GPT, trans *transliterator.Transliterator) {
 	if m.Author.Bot {
 		return
 	}
 
-	firstName := m.Author.Username
+	reg, err := regexp.Compile("[^a-zA-Z]+")
+	if err != nil {
+		return
+	}
+
+	firstName := reg.ReplaceAllString(trans.Transliterate(m.Author.Username, "en"), "")
 	if m.Author.GlobalName != "" {
-		firstName = m.Author.GlobalName
+		firstName = reg.ReplaceAllString(trans.Transliterate(m.Author.GlobalName, "en"), "")
 	}
 
 	if trimTag(m.Content) != "" {
