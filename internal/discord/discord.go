@@ -1,0 +1,153 @@
+package discord
+
+import (
+	"context"
+	"discordbotgo/internal/chatGPT"
+	"errors"
+	"github.com/bwmarrin/discordgo"
+	"github.com/sashabaranov/go-openai"
+	"io"
+	"log"
+	"regexp"
+	"strings"
+	"time"
+)
+
+type Bot struct {
+	dBot      *discordgo.Session
+	clientGPT *chatGPT.GPT
+}
+
+func NewBot(token string, clientGPT *chatGPT.GPT) *Bot {
+	session, err := discordgo.New("Bot " + token)
+	if err != nil {
+		panic(err)
+	}
+	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
+	})
+
+	session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
+		MessageHandler(s, m, clientGPT)
+	})
+
+	if err := session.Open(); err != nil {
+		panic(err)
+	}
+
+	return &Bot{dBot: session}
+}
+
+func (b *Bot) Stop() error {
+	return b.dBot.Close()
+}
+
+func (b *Bot) Send(channelID, message string) {
+	b.dBot.ChannelMessageSend(channelID, message)
+}
+
+func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate, gpt *chatGPT.GPT) {
+	if m.Author.Bot {
+		return
+	}
+
+	firstName := m.Author.Username
+	if m.Author.GlobalName != "" {
+		firstName = m.Author.GlobalName
+	}
+
+	if trimTag(m.Content) != "" {
+		if m.Message.ReferencedMessage != nil && m.Message.ReferencedMessage.Author.Bot {
+			gpt.AddHistory(m.ChannelID, trimTag(m.Message.ReferencedMessage.Content), openai.ChatMessageRoleAssistant, "Hori")
+		}
+		gpt.AddHistory(m.ChannelID, trimTag(m.Content), openai.ChatMessageRoleUser, firstName)
+	}
+
+	if !isMessageForHori(s, m) {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	var messages []openai.ChatCompletionMessage
+
+	messages = gpt.GetHistory(m.ChannelID)
+
+	stream, err := gpt.Client.CreateChatCompletionStream(
+		ctx,
+		openai.ChatCompletionRequest{
+			Model:    openai.GPT4o,
+			Messages: messages,
+			Stream:   true,
+			TopP:     1,
+			N:        1,
+		},
+	)
+	if err != nil {
+		log.Printf("ChatCompletion error: %v\n", err)
+		return
+	}
+	if stream == nil {
+		return
+	}
+	defer stream.Close()
+
+	throttleTime := time.Now()
+	content := ""
+	msgID := ""
+
+	for {
+		response, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			log.Printf("\nStream error: %v\n", err)
+			return
+		}
+
+		if response.Choices[0].Delta.Content == "" {
+			continue
+		}
+
+		content += response.Choices[0].Delta.Content
+
+		if msgID == "" {
+			message, _ := s.ChannelMessageSendReply(m.ChannelID, content, &discordgo.MessageReference{
+				MessageID: m.Message.ID,
+				ChannelID: m.ChannelID,
+				GuildID:   m.GuildID,
+			})
+			msgID = message.ID
+		} else {
+			if throttleTime.Add(time.Second).Before(time.Now()) {
+				s.ChannelMessageEdit(m.ChannelID, msgID, content)
+				throttleTime = time.Now()
+			}
+		}
+	}
+
+	s.ChannelMessageEdit(m.ChannelID, msgID, content)
+
+	gpt.AddHistory(m.ChannelID, content, openai.ChatMessageRoleAssistant, "Hori")
+	return
+}
+
+func isMessageForHori(s *discordgo.Session, m *discordgo.MessageCreate) bool {
+	if m.Message == nil || m.Message.Mentions == nil || len(m.Message.Mentions) == 0 || m.Author.ID == s.State.User.ID {
+		return false
+	}
+	for _, mention := range m.Message.Mentions {
+		if mention.Username == "Hori" {
+			break
+		}
+		return false
+	}
+
+	return true
+}
+
+func trimTag(message string) string {
+	return strings.TrimSpace(regexp.MustCompile("<[^>]*>").ReplaceAllString(message, ""))
+}
