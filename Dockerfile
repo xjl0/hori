@@ -4,7 +4,7 @@ WORKDIR /backend-app-files
 # Копируем исходный код
 COPY . .
 # Собираем статически линкованный исполняемый файл
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./hori-bot ./main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./hori-bot ./cmd/main.go
 
 # Используем базовый образ alpine для минимального образа
 FROM alpine
