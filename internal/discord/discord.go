@@ -4,6 +4,7 @@ import (
 	"context"
 	"discordbotgo/internal/chatGPT"
 	"errors"
+	"fmt"
 	"github.com/alexsergivan/transliterator"
 	"github.com/bwmarrin/discordgo"
 	"github.com/sashabaranov/go-openai"
@@ -85,7 +86,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate, gpt *chatG
 	stream, err := gpt.Client.CreateChatCompletionStream(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model:    openai.GPT4o,
+			Model:    openai.GPT4o20240513,
 			Messages: messages,
 			Stream:   true,
 			TopP:     1,
@@ -93,6 +94,11 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate, gpt *chatG
 		},
 	)
 	if err != nil {
+		s.ChannelMessageSendReply(m.ChannelID, fmt.Sprintf("Прости, я сегодня уже не могу ответить, занята, давай завтра \n ```%s\n```", err.Error()), &discordgo.MessageReference{
+			MessageID: m.Message.ID,
+			ChannelID: m.ChannelID,
+			GuildID:   m.GuildID,
+		})
 		log.Printf("ChatCompletion error: %v\n", err)
 		return
 	}
