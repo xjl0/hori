@@ -76,7 +76,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate, gpt *chatG
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
 
 	var messages []openai.ChatCompletionMessage
@@ -86,7 +86,7 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate, gpt *chatG
 	stream, err := gpt.Client.CreateChatCompletionStream(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model:    openai.GPT4o20240513,
+			Model:    "deepseek-chat",
 			Messages: messages,
 			Stream:   true,
 			TopP:     1,

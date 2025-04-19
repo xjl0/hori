@@ -1,5 +1,5 @@
 # Используем базовый образ golang для сборки приложения
-FROM golang:1.22.4 as builder
+FROM golang:1.24.2 as builder
 WORKDIR /backend-app-files
 # Копируем исходный код
 COPY . .

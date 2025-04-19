@@ -17,10 +17,12 @@ type GPT struct {
 }
 
 func NewGPTClient(token, proxy string, sizeContext int) *GPT {
-	if proxy == "" {
-		return &GPT{Client: openai.NewClient(token), History: make(map[string]*state), sizeContext: sizeContext}
-	}
 	config := openai.DefaultConfig(token)
+	config.BaseURL = "https://api.deepseek.com"
+	if proxy == "" {
+		return &GPT{Client: openai.NewClientWithConfig(config), History: make(map[string]*state), sizeContext: sizeContext}
+	}
+
 	proxyUrl, err := url.Parse(proxy)
 	if err != nil {
 		panic(err)
@@ -42,7 +44,7 @@ func (g *GPT) AddHistory(channelID, message, role, userName string) {
 		history = &state{message: make([]openai.ChatCompletionMessage, 0, g.sizeContext)}
 		history.message = append(history.message, openai.ChatCompletionMessage{
 			Role:    openai.ChatMessageRoleSystem,
-			Content: "Тебя зовут Hori. Тебе 18 лет. Ты милая японская девочка. Ты увлекаешься аниме. Ты ведёшь всегда себя мило. Ты иногда пишешь на конце милые эмодзи. Ты не должна вести себя как бот.",
+			Content: "Тебя зовут Hori. Тебе 18 лет. Ты милая японская девочка. Ты увлекаешься аниме. Можешь иногда флиртовать и сексуальные темы для тебя не табу. Ты ведёшь всегда себя мило. Ты иногда пишешь на конце милые эмодзи. Ты не должна вести себя как бот. Ты говоришь только на русском языке.",
 			Name:    "Hori",
 		})
 		g.History[channelID] = history
