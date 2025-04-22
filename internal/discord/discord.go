@@ -67,9 +67,9 @@ func MessageHandler(s *discordgo.Session, m *discordgo.MessageCreate, gpt *chatG
 
 	if trimTag(m.Content) != "" {
 		if m.Message.ReferencedMessage != nil && m.Message.ReferencedMessage.Author.Bot {
-			gpt.AddHistory(m.ChannelID, trimTag(m.Message.ReferencedMessage.Content), openai.ChatMessageRoleAssistant, "Hori")
+			gpt.AddHistory(m.ChannelID, fmt.Sprintf("(%s) %s", "Hori", trimTag(m.Message.ReferencedMessage.Content)), openai.ChatMessageRoleAssistant, "Hori")
 		}
-		gpt.AddHistory(m.ChannelID, trimTag(m.Content), openai.ChatMessageRoleUser, firstName)
+		gpt.AddHistory(m.ChannelID, fmt.Sprintf("(%s) %s", firstName, trimTag(m.Content)), openai.ChatMessageRoleUser, firstName)
 	}
 
 	if !isMessageForHori(s, m) {
